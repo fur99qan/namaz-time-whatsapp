@@ -1,8 +1,6 @@
 name: WhatsApp Bot
 
 on:
-  # schedule:
-    # - cron: '*/10 * * * *'  # Runs every 10 minutes
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
@@ -15,7 +13,7 @@ jobs:
         run: |
           echo "CHAT_ID: ${{ vars.CHAT_ID }}"
           echo "SESSION_STORAGE_REPO: ${{ vars.SESSION_STORAGE_REPO }}"
-          echo "Computed Clone URL: https://x-access-token:${{ secrets.WHATSAPP_SESSION_PAT }}@https://${{ vars.SESSION_STORAGE_REPO }}"
+          echo "Computed Clone URL: https://x-access-token:${{ secrets.WHATSAPP_SESSION_PAT }}@${{ vars.SESSION_STORAGE_REPO }}"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,12 +25,21 @@ jobs:
 
       - name: Clone private storage repo
         run: |
+          echo "Cloning session storage repository..."
           git clone https://x-access-token:${{ secrets.WHATSAPP_SESSION_PAT }}@${{ vars.SESSION_STORAGE_REPO }} session_data
+          echo "Clone complete."
+
+          echo "Listing session_data directory:"
+          ls -la session_data
 
       - name: Move session data
         run: |
+          echo "Moving session data to ~/.wwebjs_auth/"
           mkdir -p ~/.wwebjs_auth
           cp -r session_data/. ~/.wwebjs_auth/
+
+          echo "Listing files in ~/.wwebjs_auth:"
+          ls -la ~/.wwebjs_auth
 
       - name: Install dependencies
         run: npm install
@@ -40,11 +47,18 @@ jobs:
       - name: Run WhatsApp bot
         env:
           CHAT_ID: ${{ vars.CHAT_ID }}
-        run: node index.js
+        run: |
+          echo "Starting WhatsApp bot..."
+          node index.js
 
       - name: Save session data back to private repo
         run: |
+          echo "Saving session data back to repository..."
           cp -r ~/.wwebjs_auth/. session_data/
+          
+          echo "Listing updated session_data directory:"
+          ls -la session_data
+          
           cd session_data
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
