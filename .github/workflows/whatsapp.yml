@@ -1,0 +1,46 @@
+name: WhatsApp Bot
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Runs every 10 minutes
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  send-whatsapp-message:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Clone private storage repo
+        run: |
+          git clone https://x-access-token:${{ secrets.WHATSAPP_SESSION_PAT }}@${{ vars.SESSION_STORAGE_REPO }} session_data
+
+      - name: Move session data
+        run: |
+          mkdir -p ~/.wwebjs_auth
+          cp -r session_data/. ~/.wwebjs_auth/
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run WhatsApp bot
+        env:
+          CHAT_ID: ${{ vars.CHAT_ID }}
+        run: node index.js
+
+      - name: Save session data back to private repo
+        run: |
+          cp -r ~/.wwebjs_auth/. session_data/
+          cd session_data
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add .
+          git commit -m "Update WhatsApp session data" || echo "No changes to commit"
+          git push https://x-access-token:${{ secrets.WHATSAPP_SESSION_PAT }}@${{ vars.SESSION_STORAGE_REPO }} main
