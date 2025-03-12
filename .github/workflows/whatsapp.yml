@@ -10,6 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug Environment Variables
+        run: |
+          echo "CHAT_ID: ${{ vars.CHAT_ID }}"
+          echo "SESSION_STORAGE_REPO: ${{ vars.SESSION_STORAGE_REPO }}"
+          echo "Computed Clone URL: https://x-access-token:${{ secrets.WHATSAPP_SESSION_PAT }}@https://${{ vars.SESSION_STORAGE_REPO }}"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
