@@ -8,6 +8,7 @@ on:
 jobs:
   send-whatsapp-message:
     runs-on: ubuntu-latest
+    environment: Production  # Ensure GitHub loads env variables from the "Production" environment
 
     steps:
       - name: Debug Environment Variables
